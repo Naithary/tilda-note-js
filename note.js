@@ -1,24 +1,65 @@
-console.log('NOTE SCRIPT FINAL LOADED');
+console.log('NOTE SCRIPT FINAL 2 LOADED');
+
+function cleanQuizFields(body) {
+  try {
+    if (body instanceof FormData) {
+      Array.from(body.keys()).forEach(function (key) {
+        if (key.indexOf('quiz_') === 0) {
+          body.delete(key);
+          console.log('REMOVED FROM FORMDATA:', key);
+        }
+      });
+      return body;
+    }
+
+    if (body instanceof URLSearchParams) {
+      Array.from(body.keys()).forEach(function (key) {
+        if (key.indexOf('quiz_') === 0) {
+          body.delete(key);
+          console.log('REMOVED FROM URLSEARCHPARAMS:', key);
+        }
+      });
+      return body;
+    }
+
+    if (typeof body === 'string' && body.indexOf('quiz_') !== -1) {
+      const params = new URLSearchParams(body);
+
+      Array.from(params.keys()).forEach(function (key) {
+        if (key.indexOf('quiz_') === 0) {
+          params.delete(key);
+          console.log('REMOVED FROM STRING:', key);
+        }
+      });
+
+      return params.toString();
+    }
+  } catch (e) {
+    console.log('CLEAN QUIZ ERROR:', e);
+  }
+
+  return body;
+}
 
 (function () {
-  const originalAppend = FormData.prototype.append;
-  const originalSet = FormData.prototype.set;
+  const originalSend = XMLHttpRequest.prototype.send;
 
-  FormData.prototype.append = function (key, value) {
-    if (key && key.indexOf('quiz_') === 0) {
-      console.log('BLOCKED FIELD:', key);
-      return;
-    }
-    return originalAppend.call(this, key, value);
+  XMLHttpRequest.prototype.send = function (body) {
+    body = cleanQuizFields(body);
+    return originalSend.call(this, body);
   };
 
-  FormData.prototype.set = function (key, value) {
-    if (key && key.indexOf('quiz_') === 0) {
-      console.log('BLOCKED FIELD:', key);
-      return;
-    }
-    return originalSet.call(this, key, value);
-  };
+  if (window.fetch) {
+    const originalFetch = window.fetch;
+
+    window.fetch = function (resource, config) {
+      if (config && config.body) {
+        config.body = cleanQuizFields(config.body);
+      }
+
+      return originalFetch.call(this, resource, config);
+    };
+  }
 })();
 
 document.addEventListener('DOMContentLoaded', function () {
