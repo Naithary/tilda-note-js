@@ -1,3 +1,43 @@
+console.log('NOTE SCRIPT VERSION 5 LOADED');
+
+(function () {
+  const originalSend = XMLHttpRequest.prototype.send;
+
+  XMLHttpRequest.prototype.send = function (body) {
+    try {
+      if (body instanceof FormData) {
+        Array.from(body.keys()).forEach(function (key) {
+          if (key.indexOf('quiz_') === 0) {
+            body.delete(key);
+          }
+        });
+      }
+
+      if (body instanceof URLSearchParams) {
+        Array.from(body.keys()).forEach(function (key) {
+          if (key.indexOf('quiz_') === 0) {
+            body.delete(key);
+          }
+        });
+      }
+
+      if (typeof body === 'string' && body.indexOf('quiz_') !== -1) {
+        const params = new URLSearchParams(body);
+        Array.from(params.keys()).forEach(function (key) {
+          if (key.indexOf('quiz_') === 0) {
+            params.delete(key);
+          }
+        });
+        body = params.toString();
+      }
+    } catch (e) {
+      console.log('Quiz cleanup error:', e);
+    }
+
+    return originalSend.call(this, body);
+  };
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
   function init() {
     const form = document.querySelector('#form2231528201');
@@ -35,7 +75,9 @@ document.addEventListener('DOMContentLoaded', function () {
           }
         });
 
-        if (value) note += labels[name] + ': ' + value + '\n';
+        if (value) {
+          note += labels[name] + ': ' + value + '\n';
+        }
       });
 
       let noteField = form.querySelector('[name="note"]');
@@ -53,24 +95,16 @@ document.addEventListener('DOMContentLoaded', function () {
       console.log('NOTE:', note.trim());
     }
 
-    function removeQuizNames() {
-      const quizFields = form.querySelectorAll('[name^="quiz_"]');
-
-      quizFields.forEach(function (field) {
-        field.setAttribute('data-original-name', field.name);
-        field.removeAttribute('name');
-      });
-
-      console.log('Quiz fields removed from submit');
-    }
-
     form.addEventListener('input', fillNote);
     form.addEventListener('change', fillNote);
+    form.addEventListener('submit', fillNote);
 
-    form.addEventListener('submit', function () {
-      fillNote();
-      removeQuizNames();
-    });
+    const submitBtn = form.querySelector('.t-submit, [type="submit"]');
+    if (submitBtn) {
+      submitBtn.addEventListener('mousedown', fillNote);
+      submitBtn.addEventListener('click', fillNote);
+      submitBtn.addEventListener('touchstart', fillNote);
+    }
 
     fillNote();
   }
