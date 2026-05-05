@@ -1,46 +1,30 @@
-console.log('NOTE SCRIPT VERSION 5 LOADED');
+console.log('NOTE SCRIPT FINAL LOADED');
 
 (function () {
-  const originalSend = XMLHttpRequest.prototype.send;
+  const originalAppend = FormData.prototype.append;
+  const originalSet = FormData.prototype.set;
 
-  XMLHttpRequest.prototype.send = function (body) {
-    try {
-      if (body instanceof FormData) {
-        Array.from(body.keys()).forEach(function (key) {
-          if (key.indexOf('quiz_') === 0) {
-            body.delete(key);
-          }
-        });
-      }
-
-      if (body instanceof URLSearchParams) {
-        Array.from(body.keys()).forEach(function (key) {
-          if (key.indexOf('quiz_') === 0) {
-            body.delete(key);
-          }
-        });
-      }
-
-      if (typeof body === 'string' && body.indexOf('quiz_') !== -1) {
-        const params = new URLSearchParams(body);
-        Array.from(params.keys()).forEach(function (key) {
-          if (key.indexOf('quiz_') === 0) {
-            params.delete(key);
-          }
-        });
-        body = params.toString();
-      }
-    } catch (e) {
-      console.log('Quiz cleanup error:', e);
+  FormData.prototype.append = function (key, value) {
+    if (key && key.indexOf('quiz_') === 0) {
+      console.log('BLOCKED FIELD:', key);
+      return;
     }
+    return originalAppend.call(this, key, value);
+  };
 
-    return originalSend.call(this, body);
+  FormData.prototype.set = function (key, value) {
+    if (key && key.indexOf('quiz_') === 0) {
+      console.log('BLOCKED FIELD:', key);
+      return;
+    }
+    return originalSet.call(this, key, value);
   };
 })();
 
 document.addEventListener('DOMContentLoaded', function () {
   function init() {
     const form = document.querySelector('#form2231528201');
+
     if (!form) {
       setTimeout(init, 500);
       return;
@@ -100,6 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', fillNote);
 
     const submitBtn = form.querySelector('.t-submit, [type="submit"]');
+
     if (submitBtn) {
       submitBtn.addEventListener('mousedown', fillNote);
       submitBtn.addEventListener('click', fillNote);
