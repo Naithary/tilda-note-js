@@ -1,4 +1,4 @@
-console.log('NOTE SCRIPT FINAL 2 LOADED');
+console.log('NOTE SCRIPT FINAL WITH VALIDATION LOADED');
 
 function cleanQuizFields(body) {
   try {
@@ -75,30 +75,47 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function attachLogic(form) {
-    function fillNote() {
-      const labels = {
-        quiz_country: 'Страна проживания',
-        quiz_minimumbudget: 'Подходит ли инвестиционный формат от $90,000?',
-        quiz_budget: 'Инвестиционный бюджет',
-        quiz_timing: 'Срок',
-        quiz_goal: 'Цель'
-      };
+    const labels = {
+      quiz_country: 'Страна проживания',
+      quiz_minimumbudget: 'Подходит ли инвестиционный формат от $90,000?',
+      quiz_budget: 'Инвестиционный бюджет',
+      quiz_timing: 'Срок',
+      quiz_goal: 'Цель'
+    };
 
+    function getFieldValue(name) {
+      const fields = form.querySelectorAll('[name="' + name + '"]');
+      let value = '';
+
+      fields.forEach(function (field) {
+        if ((field.type === 'radio' || field.type === 'checkbox') && field.checked) {
+          value = field.value;
+        } else if (field.type !== 'radio' && field.type !== 'checkbox' && field.value.trim()) {
+          value = field.value.trim();
+        }
+      });
+
+      return value;
+    }
+
+    function validateQuizFields() {
+      for (const name in labels) {
+        const value = getFieldValue(name);
+
+        if (!value) {
+          alert('Пожалуйста, заполните поле: ' + labels[name]);
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    function fillNote() {
       let note = '';
 
       Object.keys(labels).forEach(function (name) {
-        const fields = form.querySelectorAll('[name="' + name + '"]');
-        if (!fields.length) return;
-
-        let value = '';
-
-        fields.forEach(function (field) {
-          if ((field.type === 'radio' || field.type === 'checkbox') && field.checked) {
-            value = field.value;
-          } else if (field.type !== 'radio' && field.type !== 'checkbox') {
-            value = field.value;
-          }
-        });
+        const value = getFieldValue(name);
 
         if (value) {
           note += labels[name] + ': ' + value + '\n';
@@ -122,13 +139,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.addEventListener('input', fillNote);
     form.addEventListener('change', fillNote);
-    form.addEventListener('submit', fillNote);
+
+    form.addEventListener(
+      'submit',
+      function (e) {
+        fillNote();
+
+        if (!validateQuizFields()) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return false;
+        }
+      },
+      true
+    );
 
     const submitBtn = form.querySelector('.t-submit, [type="submit"]');
 
     if (submitBtn) {
       submitBtn.addEventListener('mousedown', fillNote);
-      submitBtn.addEventListener('click', fillNote);
+      submitBtn.addEventListener('click', function (e) {
+        fillNote();
+
+        if (!validateQuizFields()) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return false;
+        }
+      }, true);
       submitBtn.addEventListener('touchstart', fillNote);
     }
 
