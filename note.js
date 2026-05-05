@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
       noteField.value = note.trim();
       noteField.setAttribute('value', note.trim());
 
-      return note.trim();
+      console.log('NOTE:', note.trim());
     }
 
     function removeQuizNames() {
@@ -64,19 +64,15 @@ document.addEventListener('DOMContentLoaded', function () {
       console.log('Quiz fields removed from submit');
     }
 
-    function prepareForm() {
+    form.addEventListener('input', fillNote);
+    form.addEventListener('change', fillNote);
+
+    form.addEventListener('submit', function () {
       fillNote();
       removeQuizNames();
-    }
+    });
 
-    form.addEventListener('submit', prepareForm);
-
-    const submitBtn = form.querySelector('.t-submit, [type="submit"]');
-    if (submitBtn) {
-      submitBtn.addEventListener('mousedown', prepareForm);
-      submitBtn.addEventListener('click', prepareForm);
-      submitBtn.addEventListener('touchstart', prepareForm);
-    }
+    fillNote();
   }
 
   init();
