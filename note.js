@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-
   function init() {
     const form = document.querySelector('#form2231528201');
     if (!form) {
@@ -11,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function attachLogic(form) {
-
     function fillNote() {
       const labels = {
         quiz_country: 'Страна проживания',
@@ -52,18 +50,32 @@ document.addEventListener('DOMContentLoaded', function () {
       noteField.value = note.trim();
       noteField.setAttribute('value', note.trim());
 
-      console.log('NOTE:', note.trim());
+      return note.trim();
     }
 
-    form.addEventListener('input', fillNote);
-    form.addEventListener('change', fillNote);
-    form.addEventListener('submit', fillNote);
+    function removeQuizNames() {
+      const quizFields = form.querySelectorAll('[name^="quiz_"]');
+
+      quizFields.forEach(function (field) {
+        field.setAttribute('data-original-name', field.name);
+        field.removeAttribute('name');
+      });
+
+      console.log('Quiz fields removed from submit');
+    }
+
+    function prepareForm() {
+      fillNote();
+      removeQuizNames();
+    }
+
+    form.addEventListener('submit', prepareForm);
 
     const submitBtn = form.querySelector('.t-submit, [type="submit"]');
     if (submitBtn) {
-      submitBtn.addEventListener('mousedown', fillNote);
-      submitBtn.addEventListener('click', fillNote);
-      submitBtn.addEventListener('touchstart', fillNote);
+      submitBtn.addEventListener('mousedown', prepareForm);
+      submitBtn.addEventListener('click', prepareForm);
+      submitBtn.addEventListener('touchstart', prepareForm);
     }
   }
 
